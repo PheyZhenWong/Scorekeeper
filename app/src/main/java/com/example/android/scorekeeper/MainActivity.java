@@ -16,6 +16,7 @@
 
 package com.example.android.scorekeeper;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.AppCompatDelegate;
@@ -43,6 +44,9 @@ public class MainActivity extends AppCompatActivity {
     static final String STATE_SCORE_1 = "Team 1 Score";
     static final String STATE_SCORE_2 = "Team 2 Score";
 
+    private SharedPreferences mPreferences;
+    private String sharedPrefFile="com.example.android.scorekeeper";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,15 +56,12 @@ public class MainActivity extends AppCompatActivity {
         mScoreText1 = findViewById(R.id.score_1);
         mScoreText2 = findViewById(R.id.score_2);
 
-        // Restores the scores if there is savedInstanceState.
-        if (savedInstanceState != null) {
-            mScore1 = savedInstanceState.getInt(STATE_SCORE_1);
-            mScore2 = savedInstanceState.getInt(STATE_SCORE_2);
+        mPreferences = getSharedPreferences(sharedPrefFile,MODE_PRIVATE);
 
-            //Set the score text views
-            mScoreText1.setText(String.valueOf(mScore1));
-            mScoreText2.setText(String.valueOf(mScore2));
-        }
+        mScore1 = mPreferences.getInt(STATE_SCORE_1, mScore1);
+        mScoreText1.setText(String.format("%s",mScore1));
+        mScore2 = mPreferences.getInt(STATE_SCORE_2, mScore2);
+        mScoreText2.setText(String.format("%s",mScore2));
     }
 
     /**
@@ -155,17 +156,27 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    /**
-     * Method that is called when the configuration changes,
-     * used to preserve the state of the app.
-     *
-     * @param outState The bundle that will be passed in to the Activity when it is restored.
-     */
+
+    public void reset(View view) {
+        // Reset count
+        mScore1 = 0;
+        mScore2 = 0;
+        mScoreText1.setText(String.format("%s", mScore1));
+        mScoreText2.setText(String.format("%s", mScore2));
+
+        // Clear preferences
+        SharedPreferences.Editor preferencesEditor = mPreferences.edit();
+        preferencesEditor.clear();
+        preferencesEditor.apply();
+    }
+
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        // Save the scores.
-        outState.putInt(STATE_SCORE_1, mScore1);
-        outState.putInt(STATE_SCORE_2, mScore2);
-        super.onSaveInstanceState(outState);
+    protected void onPause() {
+        super.onPause();
+
+        SharedPreferences.Editor preferencesEditor = mPreferences.edit();
+        preferencesEditor.putInt(STATE_SCORE_1, mScore1);
+        preferencesEditor.putInt(STATE_SCORE_2, mScore2);
+        preferencesEditor.apply();
     }
 }
